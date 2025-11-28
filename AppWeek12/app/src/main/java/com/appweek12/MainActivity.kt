@@ -4,12 +4,15 @@ import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.appweek12.databinding.ActivityMainBinding
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private val viewModel: CounterViewModel by viewModels() //view 모델을 생성하는 것
-
+    private val viewModel: CounterViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,17 +24,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupObservers() {
-        viewModel.count.observe(this){
-            count -> binding.textViewCount.text = count.toString()
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED){
+                viewModel.count.collect{
+                        count -> binding.textViewCount.text = count.toString()
 
-            when{
-                count > 0 -> binding.textViewCount.setTextColor(Color.BLUE)
-                count < 0 -> binding.textViewCount.setTextColor(Color.RED)
-                else -> binding.textViewCount.setTextColor(Color.BLACK)
+                    when{
+                        count > 0 -> binding.textViewCount.setTextColor(Color.BLUE)
+                        count < 0 -> binding.textViewCount.setTextColor(Color.RED)
+                        else -> binding.textViewCount.setTextColor(Color.BLACK)
+                    }
+                }
             }
         }
     }
-
 
     private fun setupListeners() {
         binding.buttonPlus.setOnClickListener {
@@ -47,5 +53,4 @@ class MainActivity : AppCompatActivity() {
             viewModel.incrementBy10()
         }
     }
-
 }
